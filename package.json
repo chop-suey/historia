@@ -1,0 +1,25 @@
+{
+  "name": "historia",
+  "version": "0.0.1",
+  "description": "A time registration tool for local use in your web browser",
+  "scripts": {
+    "start": "http-server src/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chop-suey/historia.git"
+  },
+  "keywords": [
+    "timestamp",
+    "time-registration"
+  ],
+  "author": "chop-suey",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/chop-suey/historia/issues"
+  },
+  "homepage": "https://github.com/chop-suey/historia#readme",
+  "devDependencies": {
+    "http-server": "^0.12.1"
+  }
+}
