@@ -4,17 +4,16 @@ customElements.define("historia-app", class extends HTMLElement {
     constructor() {
         super();
         let shadowRoot = this.attachShadow({ mode: "open" });
-        shadowRoot.innerHTML = `<h1>Historia</h1>`;
+        shadowRoot.innerHTML = `
+            <h1>Historia</h1>
+            <historia-timeslot-input>Save</historia-timeslot-input>
+            <historia-timeslots></historia-timeslots>
+        `;
+        let input = shadowRoot.querySelector("historia-timeslot-input");
+        let timeslots = shadowRoot.querySelector("historia-timeslots");
 
-        let timeslots = document.createElement("historia-timeslots");
-        
-        let timeslotInput = document.createElement("historia-timeslot-input");
-        shadowRoot.appendChild(timeslotInput);
-        timeslotInput.addEventListener("saveSlot", ({ detail }) => {
-            console.log("new slot: ", detail);
-            timeslots.dispatchEvent(new CustomEvent("addTimeslot", { detail: detail }));
+        input.addEventListener("saveSlot", ({ detail }) => {
+            timeslots.addTimeslot(detail);
         });
-        
-        shadowRoot.appendChild(timeslots);
     }
 });

@@ -25,35 +25,56 @@ class Timeslot {
 customElements.define("historia-timeslot-input", class extends HTMLElement {
     constructor () {
         super();
-        let shadowRoot = this.attachShadow({ mode: "open" });
+        this.attachShadow({ mode: "open" });
+        this.shadowRoot.innerHTML = `
+            <style>
+                :host {
+                    display: flex;
+                    justify-content: space-between;
+                    margin-top: 0.5em;
+                }
 
-        this.dateInput = this.createInput("date");
-        shadowRoot.appendChild(this.dateInput);
-        this.timeFromInput = this.createInput("time");
-        shadowRoot.appendChild(this.timeFromInput);
-        this.timeToInput = this.createInput("time");
-        shadowRoot.appendChild(this.timeToInput);
+                :host([hidden]) { display: none; }
 
-        this.subjectInput = this.createInput("text");
-        this.subjectInput.placeholder = "Subject";
-        shadowRoot.appendChild(this.subjectInput);
+                input, button {
+                    padding: 0.5em;
 
-        shadowRoot.appendChild(
-            this.createButton("To=NOW", event => timeToInput.value = this.getCurrentTime())
-        );
+                    font-family: sans-serif;
+                    font-size: 1em;
 
-        shadowRoot.appendChild(this.createButton("Apply", event => {
-            this.dispatchEvent(new CustomEvent("saveSlot", {
-                detail: new Timeslot(
-                    this.dateInput.value,
-                    this.timeFromInput.value,
-                    this.timeToInput.value,
-                    this.subjectInput.value
-                )
-            }));
-            this.refreshDefaultValues();
-        }));
+                    border: 1px solid lightgrey;
+                    border-radius: 0.5em;
+                }
+            </style>
 
+            <input id="date" type="date" />
+            <input id="timeFrom" type="time" />
+            <input id="timeTo" type="time" />
+            <button id="nowButton">To=NOW</button>
+            <input id="subject" type="text" placeholder="Subject" />
+            <button id="emitButton"><slot></slot></button>
+        `;
+        this.dateInput = this.shadowRoot.querySelector("#date");
+        this.timeFromInput = this.shadowRoot.querySelector("#timeFrom");
+        this.timeToInput = this.shadowRoot.querySelector("#timeTo");
+
+        this.subjectInput = this.shadowRoot.querySelector("#subject");
+
+        this.shadowRoot.querySelector("#nowButton")
+            .addEventListener("click", event => this.timeToInput.value = this.getCurrentTime());
+
+        this.shadowRoot.querySelector("#emitButton")
+            .addEventListener("click", event => {
+                this.dispatchEvent(new CustomEvent("saveSlot", {
+                    detail: new Timeslot(
+                        this.dateInput.value,
+                        this.timeFromInput.value,
+                        this.timeToInput.value,
+                        this.subjectInput.value
+                    )
+                }));
+                this.refreshDefaultValues();
+            });
         this.refreshDefaultValues();
     }
 
@@ -88,44 +109,83 @@ customElements.define("historia-timeslot-input", class extends HTMLElement {
             return "00";
         }
     }
-
-    createInput(type) {
-        let input = document.createElement("input");
-        input.type = type;
-        return input;
-    }
-
-    createButton(text, clickListener) {
-        let button = document.createElement("button");
-        button.innerText = text;
-        button.addEventListener("click", clickListener);
-        return button;
-    }
 });
 
 customElements.define("historia-timeslot", class extends HTMLElement {
+
     constructor() {
         super();
-        this.paragraph = document.createElement("p");
-        let shadowRoot = this.attachShadow({ mode: "open" });
-        shadowRoot.appendChild(this.paragraph);
-        this.addEventListener("setSlotItem", ({detail}) => this.setSlotItem(detail));
+        this.attachShadow({ mode: "open" });
+        this.shadowRoot.innerHTML = `
+            <style>
+            :host {
+                margin-top: 0.5em;
+                padding: 0.5em;
+                background: lightgrey;
+                border: 1px solid grey;
+                border-radius: 0.5em;
+            }
+
+            :host([hidden]) { display: none; }
+
+            :host, #times {
+                display: flex;
+                justify-content: space-between;
+            }
+
+            #container, #times {
+                display: flex;
+                justify-content: space-between;
+            }
+            #date {
+                flex-grow: 1;
+            }
+
+            #details {
+                flex-grow: 2;
+            }
+
+            </style>
+            <div id="date"></div>
+            <div id="details">
+                <div id="times">
+                    <div id="from"></div>
+                    <div id="to"></div>
+                    <div id="duration"></div>
+                </div>
+            </div>                
+        `;
     }
 
     setSlotItem(item) {
-        this.paragraph.innerText = item.toString();
+        if (item instanceof Timeslot) {
+            let { date, timeFrom, timeTo, subject } = item;
+            let duration = item.getDecimalDuration();
+            this.shadowRoot.querySelector("#date").innerText = date;
+            this.shadowRoot.querySelector("#from").innerText = timeFrom;
+            this.shadowRoot.querySelector("#to").innerText = timeTo;
+            let durationText = duration.toLocaleString(
+                undefined,
+                { minimumFractionDigits: 2, maximumFractionDigits: 2 }
+            );
+            this.shadowRoot.querySelector("#duration").innerHTML = `${durationText} h`;
+            if (subject) {
+                let subjectDiv = document.createElement("div");
+                subjectDiv.innerText = subject;
+                this.shadowRoot.querySelector("#details").appendChild(subjectDiv);
+            }
+        }
     }
 });
 
 customElements.define("historia-timeslots", class extends HTMLElement {
     constructor() {
         super();
-        this.addEventListener("addTimeslot", ({ detail }) => this.addTimeslot(detail));
     }
 
     addTimeslot(slot) {
         let slotElement = document.createElement("historia-timeslot");
-        slotElement.dispatchEvent(new CustomEvent("setSlotItem", { detail: slot }));
+        slotElement.setSlotItem(slot);
         this.appendChild(slotElement);
     }
 });
