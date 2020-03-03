@@ -1,4 +1,7 @@
-import "./components.js";
+import "./timeslot-input.js";
+import "./timeslot-views.js";
+
+import { TimeslotService } from "./timeslot-service.js";
 
 customElements.define("historia-app", class extends HTMLElement {
     constructor() {
@@ -12,7 +15,9 @@ customElements.define("historia-app", class extends HTMLElement {
         let input = shadowRoot.querySelector("historia-timeslot-input");
         let timeslots = shadowRoot.querySelector("historia-timeslots");
 
-        input.addEventListener("saveSlot", ({ detail }) => {
+        timeslots.setTimeslotService(new TimeslotService());
+
+        input.addEventListener("saveSlot", async ({ detail }) => {
             timeslots.addTimeslot(detail);
         });
     }
